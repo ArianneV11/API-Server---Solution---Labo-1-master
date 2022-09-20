@@ -124,7 +124,7 @@ class Repository {
     //méthodes utiles
     valueMatch(value, searchValue) {
         try {
-        let exp = '^' + searchValue.toLowerCase();.replace(/\*/g, '.*') + '$';
+        let exp = '^' + searchValue.toLowerCase().replace(/\*/g, '.*') + '$';
         return new RegExp(exp).test(value.toString().toLowerCase());
         } catch (error) {
         console.log(error);
