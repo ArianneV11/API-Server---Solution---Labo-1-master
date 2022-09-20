@@ -142,16 +142,53 @@ class Repository {
         else
         return this.compareNum(x, y);
     }
-    //fin méthodes utiles
+    SortListCompare(objectsList, sort, desc = false){
+       if(desc){
+        if(sort == "name,desc" || sort == "title,desc"){
+
+        }
+        else{
+
+        }
+       }
+    }
     getAll(params = null) {
         let objectsList = this.objects();
+        
+        /*objectsList.forEach((object) =>{
+            if(object.Id % 2 == 1){
+                filtreObjectList.push(object);
+            }
+        });*/
         if (this.bindExtraDataMethod != null) {
             objectsList = this.bindExtraData(objectsList);
         }
         if (params) {
-            // TODO Laboratoire 2
+            let filteredAndSortedObject = [];
+            let sortKeys = [];
+            let searchKeys = [];
+            Object.keys(params).forEach(function (paramName) {
+                if (paramName == "sort") {
+                    let keyValues = params[paramName];
+                    if (Array.isArray(keyValues)) {
+                        for (let key of keyValues) {
+                            let values = key.split(',');
+                            let descendant = (values.length > 1) && (values[1] == "desc");
+                            sortKeys.push({ key: values[0], asc: !descendant });
+                        }
+                    } else {
+                        let value = keyValues.split(',');
+                        let ascendant = (value.length > 1) && (value[1] == "desc");
+                        sortKeys.push({ key: value[0], asc: ascendant });
+                    }
+                } else {
+                    // todo add search key
+                }
+            });
+            // todo filter
+            // todo sort
+            return filteredAndSortedObject;
         }
-        return objectsList;
     }
     get(id) {
         for (let object of this.objects()) {
