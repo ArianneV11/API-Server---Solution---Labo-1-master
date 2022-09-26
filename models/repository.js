@@ -7,6 +7,7 @@
 // Lionel-Groulx College
 /////////////////////////////////////////////////////////////////////
 
+const { on } = require('events');
 const fs = require('fs');
 const utilities = require('../utilities.js');
 
@@ -124,11 +125,10 @@ class Repository {
     //méthodes utiles
     valueMatch(value, searchValue) {
         try {
-        let exp = '^' + searchValue.toLowerCase().replace(/\*/g, '.*') + '$';
-        return new RegExp(exp).test(value.toString().toLowerCase());
+            return new RegExp('^' + searchValue.toLowerCase().replace(/\*/g, '.*') + '$').test(value.toString().toLowerCase());
         } catch (error) {
-        console.log(error);
-        return false;
+            console.log(error);
+            return false;
         }
     }
     compareNum(x, y) {
@@ -144,27 +144,33 @@ class Repository {
     }
     SortListCompare(objectsList, sort, desc = false){
        if(desc){
-        if(sort == "name,desc" || sort == "title,desc"){
-
-        }
-        else{
-
-        }
+            if(sort == "name,desc" || sort == "title,desc")
+                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Title, a.Title));
+            else if(sort == "category,desc")
+                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Category, a.Category));
+            else
+                objectsList = "Error: the parameter 'sort' must include a name/title or category.";
        }
+       else{
+            if(sort == "name" || sort == "title")
+                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Title, a.Title));
+            else if(sort == "category")
+                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Category, a.Category));
+            else
+                objectsList = "Error: the parameter 'sort' must include a name/title or category.";
+       }
+       return objectsList;
     }
+   
     getAll(params = null) {
         let objectsList = this.objects();
-        
-        /*objectsList.forEach((object) =>{
-            if(object.Id % 2 == 1){
-                filtreObjectList.push(object);
-            }
-        });*/
         if (this.bindExtraDataMethod != null) {
             objectsList = this.bindExtraData(objectsList);
         }
         if (params) {
-            let filteredAndSortedObject = [];
+            let model = this.model;
+            let filteredAndSortedObjects = [];
+            // TODO Laboratoire 2
             let sortKeys = [];
             let searchKeys = [];
             Object.keys(params).forEach(function (paramName) {
@@ -178,17 +184,20 @@ class Repository {
                         }
                     } else {
                         let value = keyValues.split(',');
-                        let ascendant = (value.length > 1) && (value[1] == "desc");
-                        sortKeys.push({ key: value[0], asc: ascendant });
+                        let descendant = (value.length > 1) && (value[1] == "desc");
+                        sortKeys.push({ key: value[0], asc: !descendant });
                     }
                 } else {
                     // todo add search key
+                    if (paramName in model)
+                        searchKeys.push({key: paramName, value: params[paramName]});
                 }
             });
             // todo filter
             // todo sort
-            return filteredAndSortedObject;
+            return filteredAndSortedObjects;
         }
+        return objectsList;
     }
     get(id) {
         for (let object of this.objects()) {
