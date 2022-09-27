@@ -136,32 +136,41 @@ class Repository {
         else if (x < y) return -1;
         return 1;
     }
+    compare(itemX, itemY) {
+        let fieldIndex = 0;
+        let max = this.sortFields.length;
+        do {
+            let result = 0;
+            if (this.sortFields[fieldIndex].asc)
+                result = this.innerCompare(itemX[this.sortFields[fieldIndex].key], itemY[this.sortFields[fieldIndex].key]);
+            else
+                result = this.innerCompare(itemY[this.sortFields[fieldIndex].key], itemX[this.sortFields[fieldIndex].key]);
+            if (result == 0)
+                fieldIndex++;
+            else
+                return result;
+        } while (fieldIndex < max);
+        return 0;
+    }
     innerCompare(x, y) {
         if ((typeof x) === 'string')
         return x.localeCompare(y);
         else
         return this.compareNum(x, y);
     }
-    SortListCompare(objectsList, sort, desc = false){
-       if(desc){
-            if(sort == "name,desc" || sort == "title,desc")
-                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Title, a.Title));
-            else if(sort == "category,desc")
-                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Category, a.Category));
-            else
-                objectsList = "Error: the parameter 'sort' must include a name/title or category.";
-       }
-       else{
-            if(sort == "name" || sort == "title")
-                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Title, a.Title));
-            else if(sort == "category")
-                objectsList = [...objectsList].sort((a,b) => this.innerCompare(b.Category, a.Category));
-            else
-                objectsList = "Error: the parameter 'sort' must include a name/title or category.";
-       }
-       return objectsList;
+    sortListCompare(objectsList, sortKeys){
+        this.sortFields = sortKeys;
+        let objects = [...objectsList].sort((a,b) =>{return this.compare(a[sortKeys[0].key],b[sortKeys[0].key])});
+        return objects;
     }
-   
+    filterList(object, searchKeys){
+        for(let searchKey of searchKeys){
+            if(!this.valueMatch(object[searchKey.key], searchKey.value)){
+                return false;
+            }
+        }
+        return true;
+    }
     getAll(params = null) {
         let objectsList = this.objects();
         if (this.bindExtraDataMethod != null) {
@@ -194,8 +203,22 @@ class Repository {
                 }
             });
             // todo filter
+            for(let object of objectsList){
+                if(this.filterList(object, searchKeys)){
+                    filteredAndSortedObjects.push(object);
+                }
+            }
             // todo sort
-            return filteredAndSortedObjects;
+            if(sortKeys.length > 0){
+                if(searchKeys.length > 0){
+                    filteredAndSortedObjects = this.sortListCompare(filteredAndSortedObjects, sortKeys);
+                }
+                else{
+                    filteredAndSortedObjects = this.sortListCompare(objectsList, sortKeys);
+                }
+                return filteredAndSortedObjects;
+            }
+
         }
         return objectsList;
     }
